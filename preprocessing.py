@@ -1,4 +1,5 @@
 from sentence_transformers import SentenceTransformer
+import numpy as np
 
 
 
@@ -61,7 +62,7 @@ def get_sentences_per_page(pages: dict[str]) -> dict[list[str]]:
     return sentences
 
 
-def get_embeddings_per_page(sentences: dict[list[str]]):
+def get_embeddings_per_page(sentences: dict[list[str]]) -> dict[list[np.array]]:
     model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
     embeddings = {}
 

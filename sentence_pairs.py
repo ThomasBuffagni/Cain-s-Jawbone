@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 from itertools import accumulate
@@ -84,3 +85,31 @@ class SentencePairsClassifier(nn.Module):
     
     def forward(self, x):
         return self.model(x)
+    
+
+def inference(model: SentencePairsClassifier, embeddings: dict[list[np.array]]) -> dict[dict[float]]:
+    probabilities = {}
+    model.eval()
+
+    for page_number_a, sentences_a in embeddings.items():
+        after_page_a_logits, after_page_a_numbers = [], []
+
+        for page_number_b, sentences_b in embeddings.items():
+            if page_number_a == page_number_b:
+                continue
+            
+            t = torch.tensor(
+                np.concatenate(
+                    [sentences_a[-1], sentences_b[0]]
+                )
+            )
+            after_page_a_logits.append(model(t).item())
+            after_page_a_numbers.append(page_number_b)
+        
+        after_page_a_probs = nn.functional.softmax(torch.tensor(after_page_a_logits))
+        
+        probabilities[page_number_a] = dict(
+            zip(after_page_a_numbers, after_page_a_probs.numpy())
+        )
+    
+    return probabilities
